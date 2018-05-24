@@ -4,10 +4,17 @@ package com.creative.routetracker.sharedprefs;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.location.Location;
 
 import com.creative.routetracker.BuildConfig;
+import com.creative.routetracker.model.RouteLocation;
 import com.creative.routetracker.model.User;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -38,6 +45,8 @@ public class PrefManager {
     private static final String KEY_NUM_OF_TIME_USER_SET_ALARM = "num_of_time_user_set_alarm";
     private static final String KEY_SET_IS_APP_RUN_FIRST_TIME = "is_app_run_first_time";
     private static final String KEY_EMAIL_CACHE = "key_email_cache";
+    private static final String ROUTE_RECORDING_STATUS = "key_driving_status";
+    private static final String KEY_ROUTE_LOCATION = "KEY_ROUTE_LOCATION";
 
     public PrefManager(Context context) {
         this._context = context;
@@ -106,4 +115,49 @@ public class PrefManager {
         return GSON.fromJson(gson, User.class);
     }
 
+
+    public void setRouteRecordingStatus(boolean obj) {
+        editor = pref.edit();
+
+        editor.putBoolean(ROUTE_RECORDING_STATUS, obj);
+
+        // commit changes
+        editor.commit();
+    }
+    public boolean getRouteRecordingStatus() {
+        return pref.getBoolean(ROUTE_RECORDING_STATUS,false);
+    }
+    public void setRouteLocations(List<RouteLocation> obj) {
+        editor = pref.edit();
+
+        editor.putString(KEY_ROUTE_LOCATION, GSON.toJson(obj));
+
+        // commit changes
+        editor.commit();
+    }
+
+    public void setRouteLocations(String obj) {
+        editor = pref.edit();
+
+        editor.putString(KEY_ROUTE_LOCATION, obj);
+
+        // commit changes
+        editor.commit();
+    }
+
+
+    public List<RouteLocation> getRouteLocations() {
+
+        List<RouteLocation> productFromShared = new ArrayList<>();
+
+        String gson = pref.getString(KEY_ROUTE_LOCATION, "");
+
+        if (gson.isEmpty()) return productFromShared;
+
+        Type type = new TypeToken<List<RouteLocation>>() {
+        }.getType();
+        productFromShared = GSON.fromJson(gson, type);
+
+        return productFromShared;
+    }
 }
