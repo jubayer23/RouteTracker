@@ -127,7 +127,7 @@ public class PrefManager {
     public boolean getRouteRecordingStatus() {
         return pref.getBoolean(ROUTE_RECORDING_STATUS,false);
     }
-    public void setRouteLocations(List<RouteLocation> obj) {
+    public void setNewRouteLocations(List<RouteLocation> obj) {
         editor = pref.edit();
 
         editor.putString(KEY_ROUTE_LOCATION, GSON.toJson(obj));
@@ -136,7 +136,7 @@ public class PrefManager {
         editor.commit();
     }
 
-    public void setRouteLocations(String obj) {
+    public void setNewRouteLocations(String obj) {
         editor = pref.edit();
 
         editor.putString(KEY_ROUTE_LOCATION, obj);
@@ -146,7 +146,7 @@ public class PrefManager {
     }
 
 
-    public List<RouteLocation> getRouteLocations() {
+    public List<RouteLocation> getNewRouteLocations() {
 
         List<RouteLocation> productFromShared = new ArrayList<>();
 

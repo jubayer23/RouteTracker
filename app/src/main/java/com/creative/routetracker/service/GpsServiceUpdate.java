@@ -158,10 +158,10 @@ public class GpsServiceUpdate extends Service {
                 getLastUpdatedLang = loc_lng;
 
 
-               List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getRouteLocations();
+               List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
                RouteLocation routeLocation = new RouteLocation(loc_lat,loc_lng);
                routeLocations.add(routeLocation);
-               MydApplication.getInstance().getPrefManger().setRouteLocations(routeLocations);
+               MydApplication.getInstance().getPrefManger().setNewRouteLocations(routeLocations);
 
 
                 Intent intent = new Intent(HomeFragment.TAG_INTENT_FILTER_NAME);

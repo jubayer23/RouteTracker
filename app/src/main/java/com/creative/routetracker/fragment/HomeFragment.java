@@ -31,10 +31,12 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.creative.routetracker.CustomDialog.DialogRouteInfo;
 import com.creative.routetracker.R;
 import com.creative.routetracker.Utility.CommonMethods;
 import com.creative.routetracker.Utility.GpsEnableTool;
 import com.creative.routetracker.Utility.LastLocationOnly;
+import com.creative.routetracker.Utility.UserLastKnownLocation;
 import com.creative.routetracker.alertbanner.AlertDialogForAnything;
 import com.creative.routetracker.appdata.DummyResponse;
 import com.creative.routetracker.appdata.GlobalAppAccess;
@@ -60,6 +62,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -192,6 +197,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
+        //mMap.setClustering(new ClusteringSettings().enabled(false).addMarkersDynamically(true));
         //mMap.getUiSettings().setZoomControlsEnabled(true);
     }
 
@@ -217,12 +223,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             double lang = Double.parseDouble(starting_point[1]);
             LatLng latLng = new LatLng(lat, lang);
             Marker marker = mMap.addMarker(getRouteMarker(latLng, route.getRouteName(), route.getActivityType()));
+
             hashMapMarker.put(marker, route);
             builder.include(latLng);
         }
 
         if (MydApplication.getInstance().getPrefManger().getRouteRecordingStatus()) {
-            List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getRouteLocations();
+            List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
             int count = 0;
             previousRouteLocation = routeLocations.get(0);
             LatLng latLng = new LatLng(previousRouteLocation.getLatitude(), previousRouteLocation.getLongitude());
@@ -311,10 +318,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                                     LatLng latLng = new LatLng(previousRouteLocation.getLatitude(), previousRouteLocation.getLongitude());
                                     startMarker = mMap.addMarker(getStartOrStopMarker(latLng, MARKER_TYPE_START, "Start"));
 
-                                    List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getRouteLocations();
+                                    List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
                                     routeLocations.clear();
                                     routeLocations.add(routeLocation);
-                                    MydApplication.getInstance().getPrefManger().setRouteLocations(routeLocations);
+                                    MydApplication.getInstance().getPrefManger().setNewRouteLocations(routeLocations);
                                     // Logic to handle location object
 
                                     zoomToSpecificLocation(new LatLng(location.getLatitude(), location.getLongitude()));
@@ -365,14 +372,17 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                                     stopMarker = mMap.addMarker(getStartOrStopMarker(latLng, MARKER_TYPE_STOP, "Stop"));
                                     drawLineBetweenTwoPoint(previousRouteLocation,routeLocation);
 
-                                    List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getRouteLocations();
+                                    List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
                                     routeLocations.add(routeLocation);
-                                    MydApplication.getInstance().getPrefManger().setRouteLocations(routeLocations);
+                                    MydApplication.getInstance().getPrefManger().setNewRouteLocations(routeLocations);
                                     // Logic to handle location object
 
                                     zoomToSpecificLocation(new LatLng(location.getLatitude(), location.getLongitude()));
 
                                     stopRecodingAnimation();
+
+                                    showDialogToGetRouteInfo();
+
                                 }
                             }
                         });
@@ -488,6 +498,63 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         Polyline polylin = mMap.addPolyline(rectLine);
     }
 
+
+
+
+    private void startRecordingAnimation() {
+
+
+        btn_add_route.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.red)));
+        btn_add_route.setImageResource(R.drawable.ic_stop_white);
+
+        ll_recording.setVisibility(View.VISIBLE);
+
+
+        Animation anim = new AlphaAnimation(0.0f, 1.0f);
+        anim.setDuration(600); //You can manage the blinking time with this parameter
+        anim.setStartOffset(400);
+        anim.setRepeatMode(Animation.REVERSE);
+        anim.setRepeatCount(Animation.INFINITE);
+        img_recording_icon.startAnimation(anim);
+
+    }
+
+    private void stopRecodingAnimation() {
+
+        btn_add_route.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+        btn_add_route.setImageResource(R.drawable.ic_add_white);
+
+
+        ll_recording.setVisibility(View.GONE);
+
+        img_recording_icon.clearAnimation();
+    }
+
+    private void showDialogToGetRouteInfo(){
+
+        DialogRouteInfo.RouteInfoListener routeInfoListener = new DialogRouteInfo.RouteInfoListener() {
+
+            @Override
+            public void gotRouteInfo(String routeName, String areaType, String activityType, String duration, String fitness, String access, String safetyNotes) {
+
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        };
+        DialogRouteInfo dialogRouteInfo = new DialogRouteInfo(getActivity(), routeInfoListener);
+        dialogRouteInfo.showDialog();
+
+
+    }
+
+
+
+
+
+
     public void sendRequestToGetRoutes(String url, final String filterBy, final String userId) {
 
         // TODO Auto-generated method stub
@@ -556,34 +623,105 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     }
 
 
-    private void startRecordingAnimation() {
+
+    public void sendRequestToPublishRouteInfo(String url, final String userId, final String routeName, final String areaType, final String
+                                              activityType, final String duration, final String fitness, final String access, final String safetyNotes) {
+
+        // TODO Auto-generated method stub
+        showProgressDialog("Loading..", true, false);
+
+        List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
+
+        final String startingPoint = routeLocations.get(0).getLatitude() + "," + routeLocations.get(0).getLongitude();
+
+        final StringBuffer routeTrack = new StringBuffer (startingPoint);
+
+        for(int i = 1; i< routeLocations.size(); i++){
+            routeTrack.append( ";" + routeLocations.get(i).getLatitude() + "," + routeLocations.get(i).getLongitude());
+        }
+
+        final StringRequest req = new StringRequest(Request.Method.POST, url,
+                new com.android.volley.Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        //Log.d("DEBUG",response);
+
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+
+                            int result = jsonObject.getInt("result");
+
+                            if(result == 1){
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
 
 
-        btn_add_route.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.red)));
-        btn_add_route.setImageResource(R.drawable.ic_stop_white);
+                        Routes routeInfo = MydApplication.gson.fromJson(response, Routes.class);
 
-        ll_recording.setVisibility(View.VISIBLE);
+                        if (routeInfo.getResult() == 1) {
+
+                            routes.addAll(routeInfo.getRoutes());
+
+                            placeRoutesMarkerOnMap();
+
+                        } else {
+                            AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
+                            dismissProgressDialog();
+                        }
 
 
-        Animation anim = new AlphaAnimation(0.0f, 1.0f);
-        anim.setDuration(600); //You can manage the blinking time with this parameter
-        anim.setStartOffset(400);
-        anim.setRepeatMode(Animation.REVERSE);
-        anim.setRepeatCount(Animation.INFINITE);
-        img_recording_icon.startAnimation(anim);
+                    }
+                }, new com.android.volley.Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
+                /*dismissProgressDialog();
+
+                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);*/
+
+                String dummyResponse = DummyResponse.getRoutes();
+                Routes routeInfo = MydApplication.gson.fromJson(dummyResponse, Routes.class);
+
+                if (routeInfo.getResult() == 1) {
+
+                    routes.addAll(routeInfo.getRoutes());
+
+                    placeRoutesMarkerOnMap();
+
+                } else {
+                    AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
+                    dismissProgressDialog();
+                }
+
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("userId", userId);
+                params.put("startingPoint", startingPoint);
+                params.put("routeTrack", routeTrack.toString());
+                params.put("routeName", routeName);
+                params.put("areaType", areaType);
+                params.put("activityType", activityType);
+                params.put("duration", duration);
+                params.put("fitness", fitness);
+                params.put("access", access);
+                params.put("safetyNotes", safetyNotes);
+                return params;
+            }
+        };
+
+        req.setRetryPolicy(new DefaultRetryPolicy(60000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        // TODO Auto-generated method stub
+        MydApplication.getInstance().addToRequestQueue(req);
     }
 
-    private void stopRecodingAnimation() {
-
-        btn_add_route.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
-        btn_add_route.setImageResource(R.drawable.ic_add_white);
-
-
-        ll_recording.setVisibility(View.GONE);
-
-        img_recording_icon.clearAnimation();
-    }
 
     @Override
     public void onResume() {
