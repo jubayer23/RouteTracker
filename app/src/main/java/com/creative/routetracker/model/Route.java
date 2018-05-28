@@ -40,6 +40,8 @@ public class Route {
     @Expose
     private double averageRating;
 
+    private String routeTrack;
+
     public Integer getUserId() {
         return userId;
     }
@@ -128,4 +130,11 @@ public class Route {
         this.averageRating = averageRating;
     }
 
+    public String getRouteTrack() {
+        return routeTrack;
+    }
+
+    public void setRouteTrack(String routeTrack) {
+        this.routeTrack = routeTrack;
+    }
 }

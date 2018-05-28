@@ -33,6 +33,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.creative.routetracker.CustomDialog.DialogRouteInfo;
 import com.creative.routetracker.R;
+import com.creative.routetracker.RouteTrackDetails;
 import com.creative.routetracker.Utility.CommonMethods;
 import com.creative.routetracker.Utility.GpsEnableTool;
 import com.creative.routetracker.Utility.LastLocationOnly;
@@ -75,7 +76,7 @@ import java.util.Map;
  * Created by jubayer on 5/21/2018.
  */
 
-public class HomeFragment extends Fragment implements View.OnClickListener, OnMapReadyCallback {
+public class HomeFragment extends Fragment implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
     public static final String TAG_INTENT_FILTER_NAME = "location_receiver";
     private MapView mapView;
@@ -101,10 +102,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     private RouteLocation previousRouteLocation = null;
 
 
-    private static final int MARKER_TYPE_START = 1;
-    private static final int MARKER_TYPE_STOP = 2;
+    public static final int MARKER_TYPE_START = 1;
+    public static final int MARKER_TYPE_STOP = 2;
 
     private Marker startMarker = null, stopMarker = null;
+    List<Polyline> polylines = new ArrayList<Polyline>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -134,7 +136,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
         registerLocationReceiverBroadCast();
 
-        sendRequestToGetRoutes(GlobalAppAccess.URL_GET_ROUTE, "none", "null");
+
     }
 
     private void init(View view) {
@@ -160,6 +162,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             e.printStackTrace();
         }
 
+        showProgressDialog("please wait...",true, false);
         mapView.getMapAsync(this);
     }
 
@@ -173,14 +176,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             LastLocationOnly lastLocationOnly = new LastLocationOnly(getActivity());
             if (lastLocationOnly.canGetLocation()) {
 
-                if(MydApplication.getInstance().getPrefManger().getRouteRecordingStatus()){
+                if (MydApplication.getInstance().getPrefManger().getRouteRecordingStatus()) {
 
                     showAlertDialogToStopRecordingRoute();
 
-                }else{
+                } else {
                     showAlertDialogToStartRecordingRoute();
                 }
-
 
 
             } else {
@@ -190,13 +192,28 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         }
     }
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Route route = hashMapMarker.get(marker);
+
+        String json = MydApplication.gson.toJson(route);
+        Intent intent = new Intent(getActivity(), RouteTrackDetails.class);
+        intent.putExtra("routeTrack",json);
+        startActivity(intent);
+
+        //sendRequestToGetRouteTrack(GlobalAppAccess.URL_GET_ROUTE_TRACK, route.getRouteId());
+    }
+
     @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        dismissProgressDialog();
         this.mMap = googleMap;
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
+        mMap.setOnInfoWindowClickListener(this);
+        sendRequestToGetRoutes(GlobalAppAccess.URL_GET_ROUTES, "none", String.valueOf(MydApplication.getInstance().getPrefManger().getUserProfile().getId()));
         //mMap.setClustering(new ClusteringSettings().enabled(false).addMarkersDynamically(true));
         //mMap.getUiSettings().setZoomControlsEnabled(true);
     }
@@ -218,14 +235,14 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
 
         for (Route route : routes) {
-            String starting_point[] = route.getStartingPoint().split(",");
+            /*String starting_point[] = route.getStartingPoint().split(",");
             double lat = Double.parseDouble(starting_point[0]);
             double lang = Double.parseDouble(starting_point[1]);
             LatLng latLng = new LatLng(lat, lang);
             Marker marker = mMap.addMarker(getRouteMarker(latLng, route.getRouteName(), route.getActivityType()));
 
-            hashMapMarker.put(marker, route);
-            builder.include(latLng);
+            hashMapMarker.put(marker, route);*/
+            builder.include(addRouteStartingPointOnMap(route));
         }
 
         if (MydApplication.getInstance().getPrefManger().getRouteRecordingStatus()) {
@@ -237,7 +254,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
             for (int i = 1; i < routeLocations.size(); i++) {
                 RouteLocation currentLocation = routeLocations.get(i);
-                drawLineBetweenTwoPoint(previousRouteLocation,currentLocation);
+                drawLineBetweenTwoPoint(previousRouteLocation, currentLocation);
                 previousRouteLocation = currentLocation;
             }
 
@@ -257,6 +274,18 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
         dismissProgressDialog();
 
+    }
+
+    private LatLng addRouteStartingPointOnMap(Route route) {
+        String starting_point[] = route.getStartingPoint().split(",");
+        double lat = Double.parseDouble(starting_point[0]);
+        double lang = Double.parseDouble(starting_point[1]);
+        LatLng latLng = new LatLng(lat, lang);
+        Marker marker = mMap.addMarker(getRouteMarker(latLng, route.getRouteName(), route.getActivityType()));
+
+        hashMapMarker.put(marker, route);
+
+        return latLng;
     }
 
     @SuppressLint("MissingPermission")
@@ -312,7 +341,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                             public void onSuccess(Location location) {
                                 // Got last known location. In some rare situations this can be null.
                                 if (location != null) {
-                                    RouteLocation routeLocation = new RouteLocation(location.getLatitude(),location.getLongitude());
+                                    RouteLocation routeLocation = new RouteLocation(location.getLatitude(), location.getLongitude());
 
                                     previousRouteLocation = routeLocation;
                                     LatLng latLng = new LatLng(previousRouteLocation.getLatitude(), previousRouteLocation.getLongitude());
@@ -347,6 +376,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
         alertDialog.show();
     }
+
     private void showAlertDialogToStopRecordingRoute() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
 
@@ -366,11 +396,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                                     getActivity().stopService(new Intent(getActivity(), GpsServiceUpdate.class));
                                     MydApplication.getInstance().getPrefManger().setRouteRecordingStatus(false);
 
-                                    RouteLocation routeLocation = new RouteLocation(location.getLatitude(),location.getLongitude());
+                                    RouteLocation routeLocation = new RouteLocation(location.getLatitude(), location.getLongitude());
 
                                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                                     stopMarker = mMap.addMarker(getStartOrStopMarker(latLng, MARKER_TYPE_STOP, "Stop"));
-                                    drawLineBetweenTwoPoint(previousRouteLocation,routeLocation);
+                                    drawLineBetweenTwoPoint(previousRouteLocation, routeLocation);
 
                                     List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
                                     routeLocations.add(routeLocation);
@@ -399,6 +429,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
         alertDialog.show();
     }
+
+
 
 
     /**
@@ -433,7 +465,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             TextView title = view.findViewById(R.id.tv_title);
             LinearLayout ll_rating_container = view.findViewById(R.id.ll_rating_container);
 
-            if ((startMarker != null && marker.equals(startMarker) ) || (stopMarker != null && marker.equals(stopMarker))) {
+            if ((startMarker != null && marker.equals(startMarker)) || (stopMarker != null && marker.equals(stopMarker))) {
                 title.setText(marker.getTitle());
                 ll_rating_container.setVisibility(View.GONE);
             } else {
@@ -496,9 +528,17 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         rectLine.add(new LatLng(prevLocation.getLatitude(), prevLocation.getLongitude()));
         rectLine.add(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()));
         Polyline polylin = mMap.addPolyline(rectLine);
+        polylines.add(polylin);
     }
 
-
+    private void removeAllPolylinesAndStartEndMarker() {
+        for (Polyline line : polylines) {
+            line.remove();
+        }
+        polylines.clear();
+        startMarker.remove();
+        stopMarker.remove();
+    }
 
 
     private void startRecordingAnimation() {
@@ -530,29 +570,38 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         img_recording_icon.clearAnimation();
     }
 
-    private void showDialogToGetRouteInfo(){
+    private void showDialogToGetRouteInfo() {
+        final DialogRouteInfo dialogRouteInfo = new DialogRouteInfo(getActivity());
 
         DialogRouteInfo.RouteInfoListener routeInfoListener = new DialogRouteInfo.RouteInfoListener() {
 
             @Override
             public void gotRouteInfo(String routeName, String areaType, String activityType, String duration, String fitness, String access, String safetyNotes) {
+                Route newRoute = new Route();
+                newRoute.setUserId(MydApplication.getInstance().getPrefManger().getUserProfile().getId());
+                newRoute.setRouteName(routeName);
+                newRoute.setAreaType(areaType);
+                newRoute.setActivityType(activityType);
+                newRoute.setDuration(duration);
+                newRoute.setFitness(fitness);
+                newRoute.setAccess(access);
+                newRoute.setSafetyNotes(safetyNotes);
 
+
+                sendRequestToPublishRouteInfo(GlobalAppAccess.URL_ADD_ROUTE,newRoute,
+                        dialogRouteInfo);
             }
 
             @Override
             public void onCancel() {
-
+                removeAllPolylinesAndStartEndMarker();
             }
         };
-        DialogRouteInfo dialogRouteInfo = new DialogRouteInfo(getActivity(), routeInfoListener);
-        dialogRouteInfo.showDialog();
+
+        dialogRouteInfo.showDialog(routeInfoListener);
 
 
     }
-
-
-
-
 
 
     public void sendRequestToGetRoutes(String url, final String filterBy, final String userId) {
@@ -560,7 +609,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         // TODO Auto-generated method stub
         showProgressDialog("Loading..", true, false);
 
-        final StringRequest req = new StringRequest(Request.Method.GET, url,
+        final StringRequest req = new StringRequest(Request.Method.POST, url,
                 new com.android.volley.Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -576,7 +625,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                             placeRoutesMarkerOnMap();
 
                         } else {
-                            AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
+                            AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Error while loading the route information!", false);
                             dismissProgressDialog();
                         }
 
@@ -586,11 +635,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                /*dismissProgressDialog();
+                dismissProgressDialog();
 
-                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);*/
+                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);
 
-                String dummyResponse = DummyResponse.getRoutes();
+                /*String dummyResponse = DummyResponse.getRoutes();
                 Routes routeInfo = MydApplication.gson.fromJson(dummyResponse, Routes.class);
 
                 if (routeInfo.getResult() == 1) {
@@ -602,7 +651,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                 } else {
                     AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
                     dismissProgressDialog();
-                }
+                }*/
 
             }
         }) {
@@ -623,9 +672,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     }
 
 
-
-    public void sendRequestToPublishRouteInfo(String url, final String userId, final String routeName, final String areaType, final String
-                                              activityType, final String duration, final String fitness, final String access, final String safetyNotes) {
+    public void sendRequestToPublishRouteInfo(String url, final Route newRoute, final DialogRouteInfo dialogRouteInfo) {
 
         // TODO Auto-generated method stub
         showProgressDialog("Loading..", true, false);
@@ -634,42 +681,58 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
         final String startingPoint = routeLocations.get(0).getLatitude() + "," + routeLocations.get(0).getLongitude();
 
-        final StringBuffer routeTrack = new StringBuffer (startingPoint);
+        newRoute.setStartingPoint(startingPoint);
+        newRoute.setRouteId(-1);
 
-        for(int i = 1; i< routeLocations.size(); i++){
-            routeTrack.append( ";" + routeLocations.get(i).getLatitude() + "," + routeLocations.get(i).getLongitude());
+        final StringBuffer routeTrack = new StringBuffer(startingPoint);
+
+        for (int i = 1; i < routeLocations.size(); i++) {
+            routeTrack.append(";" + routeLocations.get(i).getLatitude() + "," + routeLocations.get(i).getLongitude());
         }
+
+        newRoute.setRouteTrack(routeTrack.toString());
 
         final StringRequest req = new StringRequest(Request.Method.POST, url,
                 new com.android.volley.Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        //Log.d("DEBUG",response);
+                        Log.d("DEBUG",response);
+
+                        dismissProgressDialog();
 
                         try {
-                            JSONObject jsonObject = new JSONObject(response);
+                            JSONObject jsonObject = new JSONObject(response.trim());
 
                             int result = jsonObject.getInt("result");
 
-                            if(result == 1){
+                            Log.d("DEBUG","come 1");
+
+                            if (result == 1) {
+                                Log.d("DEBUG","come 2");
+
+
+                                int routeId = jsonObject.getInt("routeId");
+
+                                Log.d("DEBUG","come 3");
+                                newRoute.setRouteTrack("");
+                                newRoute.setRouteId(routeId);
+
+
+                                routes.add(newRoute);
+
+                                dialogRouteInfo.dismissDialog();
+
+                                removeAllPolylinesAndStartEndMarker();
+
+                                addRouteStartingPointOnMap(newRoute);
+
+                                AlertDialogForAnything.showNotifyDialog(getActivity(), AlertDialogForAnything.ALERT_TYPE_SUCCESS, "Successfully published route");
 
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
-                        }
-
-
-                        Routes routeInfo = MydApplication.gson.fromJson(response, Routes.class);
-
-                        if (routeInfo.getResult() == 1) {
-
-                            routes.addAll(routeInfo.getRoutes());
-
-                            placeRoutesMarkerOnMap();
-
-                        } else {
-                            AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
-                            dismissProgressDialog();
+                            AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Error while publish!", false);
+                            removeAllPolylinesAndStartEndMarker();
                         }
 
 
@@ -678,23 +741,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                /*dismissProgressDialog();
+                dismissProgressDialog();
 
-                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);*/
+                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);
 
-                String dummyResponse = DummyResponse.getRoutes();
-                Routes routeInfo = MydApplication.gson.fromJson(dummyResponse, Routes.class);
-
-                if (routeInfo.getResult() == 1) {
-
-                    routes.addAll(routeInfo.getRoutes());
-
-                    placeRoutesMarkerOnMap();
-
-                } else {
-                    AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
-                    dismissProgressDialog();
-                }
+                removeAllPolylinesAndStartEndMarker();
 
             }
         }) {
@@ -702,16 +753,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("userId", userId);
+                params.put("userId", String.valueOf(newRoute.getUserId()));
                 params.put("startingPoint", startingPoint);
                 params.put("routeTrack", routeTrack.toString());
-                params.put("routeName", routeName);
-                params.put("areaType", areaType);
-                params.put("activityType", activityType);
-                params.put("duration", duration);
-                params.put("fitness", fitness);
-                params.put("access", access);
-                params.put("safetyNotes", safetyNotes);
+                params.put("routeName", newRoute.getRouteName());
+                params.put("areaType", newRoute.getAreaType());
+                params.put("activityType", newRoute.getActivityType());
+                params.put("duration", newRoute.getDuration());
+                params.put("fitness", newRoute.getFitness());
+                params.put("access", newRoute.getAccess());
+                params.put("safetyNotes", newRoute.getSafetyNotes());
                 return params;
             }
         };
@@ -723,16 +774,19 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     }
 
 
+
+
+
     @Override
     public void onResume() {
-        Log.d("DEBUG","onResume called");
+        Log.d("DEBUG", "onResume called");
         super.onResume();
         mapView.onResume();
     }
 
     @Override
     public void onPause() {
-        Log.d("DEBUG","onPause called");
+        Log.d("DEBUG", "onPause called");
         super.onPause();
         mapView.onPause();
     }

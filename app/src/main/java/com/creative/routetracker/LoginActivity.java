@@ -3,6 +3,7 @@ package com.creative.routetracker;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -109,8 +110,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
             }
 
 
-            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-            startActivity(intent);
+
         }
 
 
@@ -165,7 +165,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         // TODO Auto-generated method stub
         showProgressDialog("Loading..", true, false);
 
-        final StringRequest req = new StringRequest(Request.Method.GET, url,
+        final StringRequest req = new StringRequest(Request.Method.POST, url,
                 new com.android.volley.Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -175,7 +175,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
 
 
                         try {
-                            JSONObject jsonObject = new JSONObject(response);
+                            JSONObject jsonObject = new JSONObject(response.trim());
 
                             int result = jsonObject.getInt("result");
 

@@ -17,15 +17,18 @@ public class DialogRouteInfo {
     private Context context;
 
     private RouteInfoListener routeInfoListener;
+    final Dialog dialog_start;
 
-    public DialogRouteInfo(Context context, RouteInfoListener routeInfoListener) {
+    public DialogRouteInfo(Context context) {
         this.context = context;
-        this.routeInfoListener = routeInfoListener;
+
+        this.dialog_start = new Dialog(context,
+                android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
     }
 
-    public void showDialog() {
-        final Dialog dialog_start = new Dialog(context,
-                android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
+    public void showDialog(final RouteInfoListener routeInfoListener) {
+        this.routeInfoListener = routeInfoListener;
+
         dialog_start.setCancelable(true);
         dialog_start.setContentView(R.layout.dialog_route_info);
 
@@ -80,7 +83,7 @@ public class DialogRouteInfo {
                         ed_fitness.getText().toString(),
                         ed_access.getText().toString(),
                         ed_safety_notes.getText().toString());
-                dialog_start.dismiss();
+               // dialog_start.dismiss();
 
 
             }
@@ -97,6 +100,12 @@ public class DialogRouteInfo {
 
 
         dialog_start.show();
+    }
+
+    public void dismissDialog(){
+        if(dialog_start != null){
+            dialog_start.dismiss();
+        }
     }
 
 

@@ -7,11 +7,17 @@ public class GlobalAppAccess {
 
 
     public static final String APP_NAME = "TimeSetter";
-    public static String BaseUrl = "http://198.204.244.250:8084/";
+    public static String BaseUrl = "http://5.135.67.228/RouteTracker/";
     //public static String BaseUrl = "https://b5e99a4d.ngrok.io/bgb/";
-    public static final String URL_LOGIN =  BaseUrl + "getTimes.jsp";
-    public static final String URL_REGISTRATION = BaseUrl +  "insertTime.jsp";
-    public static final String URL_GET_ROUTE = BaseUrl +  "asdp";
+    public static final String URL_LOGIN =  BaseUrl + "login.jsp";
+    public static final String URL_REGISTRATION = BaseUrl +  "register.jsp";
+    public static final String URL_ADD_ROUTE = BaseUrl +  "addRoute.jsp";
+    public static final String URL_ADD_RATING = BaseUrl +  "addRating.jsp";
+    public static final String URL_GET_RATING = BaseUrl +  "getRating.jsp";
+    public static final String URL_GET_ROUTES = BaseUrl +  "getRoutes.jsp";
+    public static final String URL_GET_ROUTE_TRACK = BaseUrl +  "getRouteTrack2.jsp";
+    public static final String URL_SET_FAV = BaseUrl +  "setFavourite.jsp";
+    public static final String URL_DELETE_ROUTE = BaseUrl +  "deleteRoute.jsp";
 
 
     public static final  int SUCCESS = 1;

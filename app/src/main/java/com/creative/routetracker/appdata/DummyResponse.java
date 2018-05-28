@@ -38,4 +38,11 @@ public class DummyResponse {
                 "\t]\n" +
                 "}";
     }
+
+    public static String getRouteTrack(){
+        return "{\n" +
+                "\t\"result\": 1,\n" +
+                "\t\"routeTrack\": \"24.914534,91.958694;24.914534,91.958694;24.915074,91.959423;24.915395, 91.959654;24.915745,91.959965\"\n" +
+                "}";
+    }
 }

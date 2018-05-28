@@ -3,16 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_faq"
+        android:id="@+id/action_logout"
         android:icon="@drawable/ic_settings_white"
-        android:title="Faq"
+        android:title="Logout"
         app:showAsAction="collapseActionView" />
-
     <item
-        android:id="@+id/action_share"
-        android:icon="@drawable/ic_settings_white"
-        android:title="Share app"
-        app:showAsAction="collapseActionView" />
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search_black_24dp"
+        android:title="Search"
+        app:showAsAction="always" />
 
 
 

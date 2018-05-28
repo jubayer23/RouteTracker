@@ -1,11 +1,17 @@
 package com.creative.routetracker;
 
+import android.content.Intent;
+import android.graphics.Color;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 
 import com.creative.routetracker.Utility.GpsEnableTool;
 import com.creative.routetracker.Utility.LastLocationOnly;
+import com.creative.routetracker.appdata.MydApplication;
 import com.creative.routetracker.fragment.HomeFragment;
 
 public class HomeActivity extends BaseActivity {
@@ -53,5 +59,31 @@ public class HomeActivity extends BaseActivity {
         }
 
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_search) {
+           /* isSearchOpen = true;
+            view.setVisibility(View.VISIBLE);
+            //view.findViewById(R.id.place_autocomplete_clear_button).setVisibility(View.GONE);
+            view.setBackgroundColor(Color.WHITE);
+            View view2 = view.findViewById(R.id.place_autocomplete_search_button);
+            view2.performClick();*/
+
+        } else if (item.getItemId() == R.id.action_logout) {
+            MydApplication.getInstance().getPrefManger().setUserProfile("");
+            Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
