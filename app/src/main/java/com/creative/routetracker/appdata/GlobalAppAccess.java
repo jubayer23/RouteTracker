@@ -14,7 +14,7 @@ public class GlobalAppAccess {
     public static final String URL_ADD_ROUTE = BaseUrl +  "addRoute.jsp";
     public static final String URL_ADD_RATING = BaseUrl +  "addRating.jsp";
     public static final String URL_GET_RATING = BaseUrl +  "getRating.jsp";
-    public static final String URL_GET_ROUTES = BaseUrl +  "getRoutes.jsp";
+    public static final String URL_GET_ROUTES = BaseUrl +  "getRoutes22.jsp";
     public static final String URL_GET_ROUTE_TRACK = BaseUrl +  "getRouteTrack2.jsp";
     public static final String URL_SET_FAV = BaseUrl +  "setFavourite.jsp";
     public static final String URL_DELETE_ROUTE = BaseUrl +  "deleteRoute.jsp";

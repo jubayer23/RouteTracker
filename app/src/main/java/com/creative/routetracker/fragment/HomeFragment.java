@@ -635,11 +635,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                dismissProgressDialog();
+                /*dismissProgressDialog();
 
-                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);
+                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);*/
 
-                /*String dummyResponse = DummyResponse.getRoutes();
+               String dummyResponse = DummyResponse.getRoutes();
                 Routes routeInfo = MydApplication.gson.fromJson(dummyResponse, Routes.class);
 
                 if (routeInfo.getResult() == 1) {
@@ -651,7 +651,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                 } else {
                     AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
                     dismissProgressDialog();
-                }*/
+                }
 
             }
         }) {

@@ -86,7 +86,7 @@ public class RegistrationActivity extends BaseActivity implements View.OnClickLi
         // TODO Auto-generated method stub
         showProgressDialog("Loading..", true, false);
 
-        final StringRequest req = new StringRequest(Request.Method.GET, url,
+        final StringRequest req = new StringRequest(Request.Method.POST, url,
                 new com.android.volley.Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -110,7 +110,7 @@ public class RegistrationActivity extends BaseActivity implements View.OnClickLi
                                 finish();
 
                             } else {
-                                AlertDialogForAnything.showAlertDialogWhenComplte(RegistrationActivity.this, "Error", "Wrong login information!", false);
+                                AlertDialogForAnything.showAlertDialogWhenComplte(RegistrationActivity.this, "Error", "User already exist!", false);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
