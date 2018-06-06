@@ -26,14 +26,14 @@ public class DummyResponse {
                 "\t\t\t\"userId\": 2,\n" +
                 "\t\t\t\"routeId\": 2,\n" +
                 "\t\t\t\"startingPoint\": \"24.898838,91.839287\",\n" +
-                "\t\t\t\"routeName\": \"testRoute01\",\n" +
+                "\t\t\t\"routeName\": \"testRoute02\",\n" +
                 "\t\t\t\"areaType\": \"tracking\",\n" +
                 "\t\t\t\"activityType\": \"run\",\n" +
                 "\t\t\t\"duration\": \"2 hours\",\n" +
                 "\t\t\t\"fitness\": \"Extreme\",\n" +
                 "\t\t\t\"access\": \"For-all\",\n" +
                 "\t\t\t\"safetyNotes\": \"safe\",\n" +
-                "\t\t\t\"averageRating\": 3.5\n" +
+                "\t\t\t\"averageRating\": 2.5\n" +
                 "\t\t}\n" +
                 "\t]\n" +
                 "}";

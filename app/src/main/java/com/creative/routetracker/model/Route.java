@@ -1,10 +1,12 @@
 
 package com.creative.routetracker.model;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.maps.android.clustering.ClusterItem;
 
-public class Route {
+public class Route implements ClusterItem{
 
     @SerializedName("userId")
     @Expose
@@ -41,6 +43,8 @@ public class Route {
     private double averageRating;
 
     private String routeTrack;
+
+    private LatLng mPosition;
 
     public Integer getUserId() {
         return userId;
@@ -136,5 +140,25 @@ public class Route {
 
     public void setRouteTrack(String routeTrack) {
         this.routeTrack = routeTrack;
+    }
+
+
+    public void setPosition(LatLng mPosition){
+        this.mPosition = mPosition;
+    }
+
+    @Override
+    public LatLng getPosition() {
+        return mPosition;
+    }
+
+    @Override
+    public String getTitle() {
+        return null;
+    }
+
+    @Override
+    public String getSnippet() {
+        return null;
     }
 }

@@ -7,8 +7,8 @@ public class GlobalAppAccess {
 
 
     public static final String APP_NAME = "TimeSetter";
-    public static String BaseUrl = "http://5.135.67.228/RouteTracker/";
-    //public static String BaseUrl = "https://b5e99a4d.ngrok.io/bgb/";
+    //public static String BaseUrl = "http://5.135.67.228/RouteTracker/";
+    public static String BaseUrl = "none";
     public static final String URL_LOGIN =  BaseUrl + "login.jsp";
     public static final String URL_REGISTRATION = BaseUrl +  "register.jsp";
     public static final String URL_ADD_ROUTE = BaseUrl +  "addRoute.jsp";

@@ -63,6 +63,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -76,7 +79,8 @@ import java.util.Map;
  * Created by jubayer on 5/21/2018.
  */
 
-public class HomeFragment extends Fragment implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
+public class HomeFragment extends Fragment implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener,
+        ClusterManager.OnClusterItemClickListener<Route>, ClusterManager.OnClusterItemInfoWindowClickListener<Route>{
 
     public static final String TAG_INTENT_FILTER_NAME = "location_receiver";
     private MapView mapView;
@@ -108,6 +112,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     private Marker startMarker = null, stopMarker = null;
     List<Polyline> polylines = new ArrayList<Polyline>();
 
+    private ClusterManager<Route> mClusterManager;
+    private Route clickedClusterItem;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,9 +126,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         View view = inflater.inflate(R.layout.fragment_home, container,
                 false);
 
+        init(view);
+
         initMapView(view, savedInstanceState);
 
-        init(view);
+
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
 
@@ -192,6 +201,36 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         }
     }
 
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        dismissProgressDialog();
+        this.mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        //mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
+
+        mMap.setOnInfoWindowClickListener(this);
+        sendRequestToGetRoutes(GlobalAppAccess.URL_GET_ROUTES, "none", String.valueOf(MydApplication.getInstance().getPrefManger().getUserProfile().getId()));
+
+
+        mClusterManager = new ClusterManager<Route>(getActivity(), mMap);
+        mClusterManager.setRenderer(new RouteRenderer(getActivity(),mMap,mClusterManager));
+        mMap.setInfoWindowAdapter(mClusterManager.getMarkerManager());
+        mClusterManager.getMarkerCollection().setOnInfoWindowAdapter(
+                new CustomInfoWindowAdapter());
+        mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnMarkerClickListener(mClusterManager);
+        mMap.setOnInfoWindowClickListener(mClusterManager);
+       // mClusterManager.setOnClusterClickListener(this);
+       // mClusterManager.setOnClusterInfoWindowClickListener(this);
+          mClusterManager.setOnClusterItemClickListener(this);
+         mClusterManager.setOnClusterItemInfoWindowClickListener(this);
+        //mMap.setClustering(new ClusteringSettings().enabled(false).addMarkersDynamically(true));
+        //mMap.getUiSettings().setZoomControlsEnabled(true);
+    }
+
     @Override
     public void onInfoWindowClick(Marker marker) {
         Route route = hashMapMarker.get(marker);
@@ -204,18 +243,19 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         //sendRequestToGetRouteTrack(GlobalAppAccess.URL_GET_ROUTE_TRACK, route.getRouteId());
     }
 
-    @SuppressLint("MissingPermission")
+
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        dismissProgressDialog();
-        this.mMap = googleMap;
-        mMap.setMyLocationEnabled(true);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
-        mMap.setOnInfoWindowClickListener(this);
-        sendRequestToGetRoutes(GlobalAppAccess.URL_GET_ROUTES, "none", String.valueOf(MydApplication.getInstance().getPrefManger().getUserProfile().getId()));
-        //mMap.setClustering(new ClusteringSettings().enabled(false).addMarkersDynamically(true));
-        //mMap.getUiSettings().setZoomControlsEnabled(true);
+    public boolean onClusterItemClick(Route route) {
+        clickedClusterItem = route;
+        return false;
+    }
+
+    @Override
+    public void onClusterItemInfoWindowClick(Route route) {
+        String json = MydApplication.gson.toJson(route);
+        Intent intent = new Intent(getActivity(), RouteTrackDetails.class);
+        intent.putExtra("routeTrack",json);
+        startActivity(intent);
     }
 
     protected void zoomToSpecificLocation(LatLng latLng) {
@@ -244,6 +284,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             hashMapMarker.put(marker, route);*/
             builder.include(addRouteStartingPointOnMap(route));
         }
+        mClusterManager.cluster();
 
         if (MydApplication.getInstance().getPrefManger().getRouteRecordingStatus()) {
             List<RouteLocation> routeLocations = MydApplication.getInstance().getPrefManger().getNewRouteLocations();
@@ -271,6 +312,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             zoomToCurrentLocation();
         }
 
+        Log.d("DEBUG","it come here");
+
 
         dismissProgressDialog();
 
@@ -281,9 +324,12 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         double lat = Double.parseDouble(starting_point[0]);
         double lang = Double.parseDouble(starting_point[1]);
         LatLng latLng = new LatLng(lat, lang);
-        Marker marker = mMap.addMarker(getRouteMarker(latLng, route.getRouteName(), route.getActivityType()));
+        route.setPosition(latLng);
+        mClusterManager.addItem(route);
 
-        hashMapMarker.put(marker, route);
+       // Marker marker = mMap.addMarker(getRouteMarker(latLng, route.getRouteName(), route.getActivityType()));
+
+       // hashMapMarker.put(marker, route);
 
         return latLng;
     }
@@ -431,8 +477,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     }
 
 
-
-
     /**
      * Demonstrates customizing the info window and/or its contents.
      */
@@ -469,7 +513,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                 title.setText(marker.getTitle());
                 ll_rating_container.setVisibility(View.GONE);
             } else {
-                Route route = hashMapMarker.get(marker);
+                Route route = clickedClusterItem;
 
 
                 title.setText(route.getRouteName());
@@ -774,6 +818,29 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     }
 
 
+
+
+    private class RouteRenderer extends DefaultClusterRenderer<Route>{
+
+        public RouteRenderer(Context context, GoogleMap map, ClusterManager<Route> clusterManager) {
+            super(context, map, clusterManager);
+        }
+
+
+        @Override
+        protected void onBeforeClusterItemRendered(Route route, MarkerOptions markerOptions) {
+            // Draw a single person.
+            // Set the info window to show their name.
+            markerOptions.icon(CommonMethods.bitmapDescriptorFromVector(getActivity(), GlobalAppAccess.getMarkerOfActivity(route.getActivityType()))).title(route.getRouteName());
+        }
+
+
+        @Override
+        protected boolean shouldRenderAsCluster(Cluster cluster) {
+            // Always render clusters.
+            return cluster.getSize() > 1;
+        }
+    }
 
 
 
