@@ -97,7 +97,7 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
         tv_fitness = findViewById(R.id.tv_fitness);
         tv_access = findViewById(R.id.tv_access);
         tv_safety_notes = findViewById(R.id.tv_safety_notes);
-         ll_rating_container = findViewById(R.id.ll_rating_container);
+        ll_rating_container = findViewById(R.id.ll_rating_container);
     }
 
 

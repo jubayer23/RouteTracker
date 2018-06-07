@@ -32,7 +32,7 @@ public class DummyResponse {
                 "\t\t\t\"duration\": \"2 hours\",\n" +
                 "\t\t\t\"fitness\": \"Extreme\",\n" +
                 "\t\t\t\"access\": \"For-all\",\n" +
-                "\t\t\t\"safetyNotes\": \"safe\",\n" +
+                "\t\t\t\"safetyNotes\": \"safehh\",\n" +
                 "\t\t\t\"averageRating\": 2.5\n" +
                 "\t\t}\n" +
                 "\t]\n" +
