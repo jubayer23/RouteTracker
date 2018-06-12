@@ -2,7 +2,9 @@ package com.creative.routetracker;
 
 import android.content.pm.PackageManager;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.ViewGroup;
@@ -19,6 +21,9 @@ import com.creative.routetracker.alertbanner.AlertDialogForAnything;
 import com.creative.routetracker.appdata.DummyResponse;
 import com.creative.routetracker.appdata.GlobalAppAccess;
 import com.creative.routetracker.appdata.MydApplication;
+import com.creative.routetracker.appdata.ViewPagerAdapter;
+import com.creative.routetracker.fragment.FragmentRouteInfo;
+import com.creative.routetracker.fragment.FragmentRouteReview;
 import com.creative.routetracker.fragment.HomeFragment;
 import com.creative.routetracker.model.Route;
 import com.creative.routetracker.model.RouteLocation;
@@ -46,6 +51,8 @@ import java.util.Map;
 
 public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallback{
 
+    private static final String TAG_FRAG_ROUTE_INFO = "Info";
+    private static final String TAG_FRAG_ROUTE_REVIEW = "review";
     private GoogleMap mMap;
     private Route route;
 
@@ -56,6 +63,8 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
     LinearLayout ll_bottom_sheet;
     BottomSheetBehavior sheetBehavior;
     private static final int botomSheetPeekHeight = 240;
+    private TabLayout bottom_sheet_tabs;
+    private ViewPager bottom_sheet_viewpager;
 
 
     private TextView tv_area_type, tv_activity_type, tv_route_name,tv_duration, tv_fitness, tv_access, tv_safety_notes;
@@ -66,16 +75,22 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_track_details);
 
-        initToolbar(true);
-
-        init();
-
-        setUpMap();
 
         String gson = getIntent().getStringExtra("routeTrack");
         route = MydApplication.gson.fromJson(gson,Route.class);
 
-        updateBottomSheet();
+
+        initToolbar(route.getRouteName(),true);
+
+        init();
+
+        initBottomSheet();
+
+        setUpMap();
+
+
+
+       // updateBottomSheet();
 
         //toggleBottomSheet();
 
@@ -84,21 +99,29 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
 
     private void init() {
 
+
+
+    }
+
+    private void initBottomSheet(){
         ll_bottom_sheet = (LinearLayout) findViewById(R.id.bottom_sheet);
         sheetBehavior = BottomSheetBehavior.from(ll_bottom_sheet);
         sheetBehavior.setPeekHeight(botomSheetPeekHeight);
         sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        BottomSheetBehavior.from(ll_bottom_sheet).setHideable(false);
+        sheetBehavior.setHideable(false);
 
-        tv_route_name = findViewById(R.id.tv_route_name);
-        tv_area_type = findViewById(R.id.tv_area_type);
-        tv_activity_type = findViewById(R.id.tv_activity_type);
-        tv_duration = findViewById(R.id.tv_duration);
-        tv_fitness = findViewById(R.id.tv_fitness);
-        tv_access = findViewById(R.id.tv_access);
-        tv_safety_notes = findViewById(R.id.tv_safety_notes);
-        ll_rating_container = findViewById(R.id.ll_rating_container);
+
+        bottom_sheet_viewpager = (ViewPager) findViewById(R.id.bottom_sheet_viewpager);
+        //setupViewPager(viewPager);
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter.addFragment(new FragmentRouteInfo(), TAG_FRAG_ROUTE_INFO);
+        adapter.addFragment(new FragmentRouteReview(), TAG_FRAG_ROUTE_REVIEW);
+        bottom_sheet_viewpager.setAdapter(adapter);
+
+        bottom_sheet_tabs = (TabLayout) findViewById(R.id.bottom_sheet_tabs);
+        bottom_sheet_tabs.setupWithViewPager(bottom_sheet_viewpager);
     }
+
 
 
     private void setUpMap() {
@@ -220,6 +243,9 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
             sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         }
     }
+
+
+    public Route sendRoute
 
     public void sendRequestToGetRouteTrack(String url, final int routeId) {
 
