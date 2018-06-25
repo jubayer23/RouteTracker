@@ -245,7 +245,9 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
     }
 
 
-    public Route sendRoute
+    public Route getRoute(){
+        return route;
+    }
 
     public void sendRequestToGetRouteTrack(String url, final int routeId) {
 
@@ -260,6 +262,34 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
 
 
 
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+
+                            int result = jsonObject.getInt("result");
+
+                            if (result == 1) {
+                                String routeTrack = jsonObject.getString("routeTrack");
+                                String points[] = routeTrack.split(";");
+                                ArrayList<RouteLocation> routeLocations = new ArrayList<>();
+                                for(String point : points){
+                                    String lat_lang[] = point.split(",");
+                                    double lat = Double.parseDouble(lat_lang[0]);
+                                    double lang = Double.parseDouble(lat_lang[1]);
+                                    RouteLocation routeLocation = new RouteLocation(lat,lang);
+                                    routeLocations.add(routeLocation);
+                                }
+
+                                drawRoutePath(routeLocations);
+                            }else{
+                                AlertDialogForAnything.showAlertDialogWhenComplte(RouteTrackDetails.this, "Error", "Error in fetching route info", false);
+                                dismissProgressDialog();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        dismissProgressDialog();
+
 
 
                     }
@@ -267,12 +297,12 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                /*dismissProgressDialog();
-
-                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);*/
-
-
                 dismissProgressDialog();
+
+                AlertDialogForAnything.showAlertDialogWhenComplte(RouteTrackDetails.this, "Error", "Network problem. please try again!", false);
+
+
+               /* dismissProgressDialog();
                 String dummyResponse = DummyResponse.getRouteTrack();
 
                 try {
@@ -299,7 +329,7 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                }
+                }*/
 
 
             }

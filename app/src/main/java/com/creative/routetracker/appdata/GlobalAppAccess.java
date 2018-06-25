@@ -7,15 +7,15 @@ public class GlobalAppAccess {
 
 
     public static final String APP_NAME = "TimeSetter";
-    //public static String BaseUrl = "http://5.135.67.228/RouteTracker/";
-    public static String BaseUrl = "none";
+    public static String BaseUrl = "http://5.135.67.228/RouteTracker/";
+    //public static String BaseUrl = "none";
     public static final String URL_LOGIN =  BaseUrl + "login.jsp";
     public static final String URL_REGISTRATION = BaseUrl +  "register.jsp";
     public static final String URL_ADD_ROUTE = BaseUrl +  "addRoute.jsp";
     public static final String URL_ADD_RATING = BaseUrl +  "addRating.jsp";
     public static final String URL_GET_RATING = BaseUrl +  "getRating.jsp";
-    public static final String URL_GET_ROUTES = BaseUrl +  "getRoutes22.jsp";
-    public static final String URL_GET_ROUTE_TRACK = BaseUrl +  "getRouteTrack2.jsp";
+    public static final String URL_GET_ROUTES = BaseUrl +  "getRoutes.jsp";
+    public static final String URL_GET_ROUTE_TRACK = BaseUrl +  "getRouteTrack.jsp";
     public static final String URL_SET_FAV = BaseUrl +  "setFavourite.jsp";
     public static final String URL_DELETE_ROUTE = BaseUrl +  "deleteRoute.jsp";
 

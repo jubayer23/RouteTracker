@@ -212,7 +212,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         //mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
 
         mMap.setOnInfoWindowClickListener(this);
-        sendRequestToGetRoutes(GlobalAppAccess.URL_GET_ROUTES, "none", String.valueOf(MydApplication.getInstance().getPrefManger().getUserProfile().getId()));
+
+
 
 
         mClusterManager = new ClusterManager<Route>(getActivity(), mMap);
@@ -229,6 +230,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
          mClusterManager.setOnClusterItemInfoWindowClickListener(this);
         //mMap.setClustering(new ClusteringSettings().enabled(false).addMarkersDynamically(true));
         //mMap.getUiSettings().setZoomControlsEnabled(true);
+
+
+        sendRequestToGetRoutes(GlobalAppAccess.URL_GET_ROUTES, "none", String.valueOf(MydApplication.getInstance().getPrefManger().getUserProfile().getId()));
     }
 
     @Override
@@ -679,11 +683,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                /*dismissProgressDialog();
+                dismissProgressDialog();
 
-                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);*/
+                AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Network problem. please try again!", false);
 
-               String dummyResponse = DummyResponse.getRoutes();
+                /*String dummyResponse = DummyResponse.getRoutes();
                 Routes routeInfo = MydApplication.gson.fromJson(dummyResponse, Routes.class);
 
                 if (routeInfo.getResult() == 1) {
@@ -695,7 +699,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
                 } else {
                     AlertDialogForAnything.showAlertDialogWhenComplte(getActivity(), "Error", "Wrong login information!", false);
                     dismissProgressDialog();
-                }
+                }*/
 
             }
         }) {
@@ -749,15 +753,12 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
                             int result = jsonObject.getInt("result");
 
-                            Log.d("DEBUG","come 1");
 
                             if (result == 1) {
-                                Log.d("DEBUG","come 2");
 
 
                                 int routeId = jsonObject.getInt("routeId");
 
-                                Log.d("DEBUG","come 3");
                                 newRoute.setRouteTrack("");
                                 newRoute.setRouteId(routeId);
 
