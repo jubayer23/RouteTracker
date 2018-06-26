@@ -49,6 +49,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import biz.laenger.android.vpbs.BottomSheetUtils;
+
 public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallback{
 
     private static final String TAG_FRAG_ROUTE_INFO = "Info";
@@ -120,6 +122,7 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
 
         bottom_sheet_tabs = (TabLayout) findViewById(R.id.bottom_sheet_tabs);
         bottom_sheet_tabs.setupWithViewPager(bottom_sheet_viewpager);
+        BottomSheetUtils.setupViewPager(bottom_sheet_viewpager);
     }
 
 
