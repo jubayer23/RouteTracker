@@ -7,11 +7,19 @@
         android:icon="@drawable/ic_settings_white"
         android:title="Logout"
         app:showAsAction="collapseActionView" />
+
+    <item
+        android:id="@+id/action_filter"
+        android:icon="@drawable/ic_filter"
+        android:title="Search"
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_search"
         android:icon="@drawable/ic_search_black_24dp"
         android:title="Search"
         app:showAsAction="always" />
+
+
 
 
 

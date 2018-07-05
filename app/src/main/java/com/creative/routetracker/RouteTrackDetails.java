@@ -1,5 +1,6 @@
 package com.creative.routetracker;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.TabLayout;
@@ -7,6 +8,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -34,6 +37,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -50,8 +54,10 @@ import java.util.List;
 import java.util.Map;
 
 import biz.laenger.android.vpbs.BottomSheetUtils;
+import biz.laenger.android.vpbs.ViewPagerBottomSheetBehavior;
 
-public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallback{
+
+public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallback {
 
     private static final String TAG_FRAG_ROUTE_INFO = "Info";
     private static final String TAG_FRAG_ROUTE_REVIEW = "review";
@@ -63,14 +69,20 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
     LatLngBounds.Builder builder;
 
     LinearLayout ll_bottom_sheet;
-    BottomSheetBehavior sheetBehavior;
+    ViewPagerBottomSheetBehavior sheetBehavior;
     private static final int botomSheetPeekHeight = 240;
     private TabLayout bottom_sheet_tabs;
     private ViewPager bottom_sheet_viewpager;
 
+    ArrayList<RouteLocation> routeLocations = new ArrayList<>();
 
-    private TextView tv_area_type, tv_activity_type, tv_route_name,tv_duration, tv_fitness, tv_access, tv_safety_notes;
+
+    private TextView tv_area_type, tv_activity_type, tv_route_name, tv_duration, tv_fitness, tv_access, tv_safety_notes;
     LinearLayout ll_rating_container;
+
+
+    private boolean isFav = false;
+    private int favPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,10 +91,10 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
 
 
         String gson = getIntent().getStringExtra("routeTrack");
-        route = MydApplication.gson.fromJson(gson,Route.class);
+        route = MydApplication.gson.fromJson(gson, Route.class);
 
 
-        initToolbar(route.getRouteName(),true);
+        initToolbar(route.getRouteName(), true);
 
         init();
 
@@ -91,8 +103,7 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
         setUpMap();
 
 
-
-       // updateBottomSheet();
+        // updateBottomSheet();
 
         //toggleBottomSheet();
 
@@ -102,15 +113,14 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
     private void init() {
 
 
-
     }
 
-    private void initBottomSheet(){
+    private void initBottomSheet() {
         ll_bottom_sheet = (LinearLayout) findViewById(R.id.bottom_sheet);
-        sheetBehavior = BottomSheetBehavior.from(ll_bottom_sheet);
-        sheetBehavior.setPeekHeight(botomSheetPeekHeight);
-        sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        sheetBehavior.setHideable(false);
+        sheetBehavior = ViewPagerBottomSheetBehavior.from(ll_bottom_sheet);
+        //sheetBehavior.setPeekHeight(botomSheetPeekHeight);
+        //sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        //sheetBehavior.setHideable(false);
 
 
         bottom_sheet_viewpager = (ViewPager) findViewById(R.id.bottom_sheet_viewpager);
@@ -123,8 +133,31 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
         bottom_sheet_tabs = (TabLayout) findViewById(R.id.bottom_sheet_tabs);
         bottom_sheet_tabs.setupWithViewPager(bottom_sheet_viewpager);
         BottomSheetUtils.setupViewPager(bottom_sheet_viewpager);
-    }
 
+        bottom_sheet_tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0:
+                        sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                        break;
+                    case 1:
+                        sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+    }
 
 
     private void setUpMap() {
@@ -143,22 +176,22 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
 
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        mMap.getUiSettings().setZoomControlsEnabled(true);
+       // mMap.getUiSettings().setZoomControlsEnabled(true);
         //mMap.setOnMapClickListener(this);
 
-        sendRequestToGetRouteTrack(GlobalAppAccess.URL_GET_ROUTE_TRACK,route.getRouteId());
+        sendRequestToGetRouteTrack(GlobalAppAccess.URL_GET_ROUTE_TRACK, route.getRouteId());
 
     }
 
-    private void drawRoutePath(ArrayList<RouteLocation> routeLocations){
-        int i ;
+    private void drawRoutePath(ArrayList<RouteLocation> routeLocations) {
+        int i;
         builder = new LatLngBounds.Builder();
         RouteLocation previousRouteLocation = routeLocations.get(0);
         LatLng startLatLng = new LatLng(previousRouteLocation.getLatitude(), previousRouteLocation.getLongitude());
         startMarker = mMap.addMarker(getStartOrStopMarker(startLatLng, HomeFragment.MARKER_TYPE_START, "Start"));
         builder.include(startLatLng);
 
-        for ( i = 1; i < routeLocations.size(); i++) {
+        for (i = 1; i < routeLocations.size(); i++) {
             RouteLocation currentLocation = routeLocations.get(i);
             LatLng middleLatlng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
             builder.include(middleLatlng);
@@ -202,7 +235,94 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
     }
 
 
-    private void updateBottomSheet(){
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_route_details, menu);
+
+        MenuItem menuItem_fav = menu.findItem(R.id.action_fav);
+
+        List<Route> favRoutes = MydApplication.getInstance().getPrefManger().getFavRoutes();
+
+        isFav = false;
+        int count = 0;
+        for(Route favRoute: favRoutes){
+            if(favRoute.getRouteId() == route.getRouteId()){
+                isFav = true;
+                favPosition = count;
+                break;
+            }
+            count++;
+        }
+
+        if(isFav){
+            menuItem_fav.setIcon(getResources().getDrawable(R.drawable.ic_favorite_fill_white));
+        }else{
+            menuItem_fav.setIcon(getResources().getDrawable(R.drawable.ic_favorite_border_white));
+        }
+        //Do you custom menu work above this comment
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_fav) {
+            ArrayList<Route> favRoutes = MydApplication.getInstance().getPrefManger().getFavRoutes();
+            if(isFav){
+                isFav = false;
+                item.setIcon(getResources().getDrawable(R.drawable.ic_favorite_border_white));
+                favRoutes.remove(favPosition);
+
+            }else{
+                item.setIcon(getResources().getDrawable(R.drawable.ic_favorite_fill_white));
+                isFav = true;
+                favPosition = favRoutes.size();
+                favRoutes.add(route);
+
+            }
+            MydApplication.getInstance().getPrefManger().setFavRoutes(favRoutes);
+            return true;
+        }
+
+        if (id == R.id.action_follow) {
+            moveCameraToFollow();
+            //MydApplication.getInstance().getPrefManger().setUserProfile("");
+            //Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            //startActivity(intent);
+            //finish();
+            //processLogout();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void moveCameraToFollow(){
+        double lat1 = degToRad(routeLocations.get(0).getLatitude());
+        double lon1 = degToRad(routeLocations.get(0).getLongitude());
+        double lat2 = degToRad(routeLocations.get(1).getLatitude());
+        double lon2 = degToRad(routeLocations.get(1).getLongitude());
+
+        double a = Math.sin(lon2 - lon1) * Math.cos(lat2);
+        double b = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+        float c = radToDeg((float) Math.atan2(a, b));
+
+        RouteLocation previousRouteLocation = routeLocations.get(0);
+        LatLng startLatLng = new LatLng(previousRouteLocation.getLatitude(), previousRouteLocation.getLongitude());
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(startLatLng, 20, 0, c)));
+    }
+
+    public static double degToRad(double deg){
+        return deg * Math.PI / 180.0;
+    }
+    public static float radToDeg(float rad){
+        rad = (float) (rad * (180.0 / Math.PI));
+        if (rad < 0) rad = (float) (360.0 + rad);
+        return rad;
+    }
+
+
+    private void updateBottomSheet() {
 
         tv_route_name.setText(route.getRouteName());
         tv_area_type.setText(route.getAreaType());
@@ -234,6 +354,7 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
 
 
     }
+
     public void toggleBottomSheet() {
 
         if (sheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
@@ -248,7 +369,7 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
     }
 
 
-    public Route getRoute(){
+    public Route getRoute() {
         return route;
     }
 
@@ -264,7 +385,6 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
                         //Log.d("DEBUG",response);
 
 
-
                         try {
                             JSONObject jsonObject = new JSONObject(response);
 
@@ -273,17 +393,17 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
                             if (result == 1) {
                                 String routeTrack = jsonObject.getString("routeTrack");
                                 String points[] = routeTrack.split(";");
-                                ArrayList<RouteLocation> routeLocations = new ArrayList<>();
-                                for(String point : points){
+                                routeLocations.clear();
+                                for (String point : points) {
                                     String lat_lang[] = point.split(",");
                                     double lat = Double.parseDouble(lat_lang[0]);
                                     double lang = Double.parseDouble(lat_lang[1]);
-                                    RouteLocation routeLocation = new RouteLocation(lat,lang);
+                                    RouteLocation routeLocation = new RouteLocation(lat, lang);
                                     routeLocations.add(routeLocation);
                                 }
 
                                 drawRoutePath(routeLocations);
-                            }else{
+                            } else {
                                 AlertDialogForAnything.showAlertDialogWhenComplte(RouteTrackDetails.this, "Error", "Error in fetching route info", false);
                                 dismissProgressDialog();
                             }
@@ -292,7 +412,6 @@ public class RouteTrackDetails extends BaseActivity implements OnMapReadyCallbac
                         }
 
                         dismissProgressDialog();
-
 
 
                     }

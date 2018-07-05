@@ -53,7 +53,7 @@ public class FeedBackAdapter extends RecyclerView.Adapter<FeedBackAdapter.MyView
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.row_time_list, parent, false);
+                .inflate(R.layout.row_feedback, parent, false);
 
 
         return new MyViewHolder(itemView);

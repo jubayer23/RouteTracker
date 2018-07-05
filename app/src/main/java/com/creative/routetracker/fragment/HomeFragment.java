@@ -64,6 +64,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
@@ -80,13 +81,15 @@ import java.util.Map;
  */
 
 public class HomeFragment extends Fragment implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener,
-        ClusterManager.OnClusterItemClickListener<Route>, ClusterManager.OnClusterItemInfoWindowClickListener<Route>{
+        ClusterManager.OnClusterItemClickListener<Route>, ClusterManager.OnClusterItemInfoWindowClickListener<Route>,
+        ClusterManager.OnClusterClickListener<Route>{
 
     public static final String TAG_INTENT_FILTER_NAME = "location_receiver";
     private MapView mapView;
 
     private GoogleMap mMap;
 
+    private List<Route> originalRoutes = new ArrayList<>();
     private List<Route> routes = new ArrayList<>();
 
     private HashMap<Marker, Route> hashMapMarker = new HashMap<>();
@@ -209,6 +212,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         this.mMap = googleMap;
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setMapToolbarEnabled(false);
         //mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
 
         mMap.setOnInfoWindowClickListener(this);
@@ -227,6 +231,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
        // mClusterManager.setOnClusterClickListener(this);
        // mClusterManager.setOnClusterInfoWindowClickListener(this);
           mClusterManager.setOnClusterItemClickListener(this);
+          mClusterManager.setOnClusterClickListener(this);
          mClusterManager.setOnClusterItemInfoWindowClickListener(this);
         //mMap.setClustering(new ClusteringSettings().enabled(false).addMarkersDynamically(true));
         //mMap.getUiSettings().setZoomControlsEnabled(true);
@@ -262,6 +267,36 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         startActivity(intent);
     }
 
+
+
+    @Override
+    public boolean onClusterClick(Cluster<Route> cluster) {
+        // Show a toast with some info when the cluster is clicked.
+       // String firstName = cluster.getItems().iterator().next().name;
+        //Toast.makeText(this, cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT).show();
+
+        // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
+        // inside of bounds, then animate to center of the bounds.
+
+        // Create the builder to collect all essential cluster items for the bounds.
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        for (ClusterItem item : cluster.getItems()) {
+            builder.include(item.getPosition());
+        }
+        // Get the LatLngBounds
+        final LatLngBounds bounds = builder.build();
+
+        // Animate camera to the bounds
+        try {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+
     protected void zoomToSpecificLocation(LatLng latLng) {
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)      // Sets the center of the map to location user
@@ -275,6 +310,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     protected void placeRoutesMarkerOnMap() {
         builder = new LatLngBounds.Builder();
         mMap.clear();
+        mClusterManager.clearItems();
         hashMapMarker.clear();
 
 
@@ -651,6 +687,44 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
     }
 
+    public void changeMapAccordingToFilter(boolean isFav, ArrayList<String> activityType){
+
+        ArrayList<Route> filterRoutes = new ArrayList<>();
+        if(isFav){
+           if(activityType.isEmpty()){
+               filterRoutes.addAll(MydApplication.getInstance().getPrefManger().getFavRoutes());
+           }else{
+               ArrayList<Route> favRoutes = MydApplication.getInstance().getPrefManger().getFavRoutes();
+
+               for(Route favRoute: favRoutes){
+                   if(activityType.contains(favRoute.getActivityType())){
+                       filterRoutes.add(favRoute);
+                   }
+               }
+           }
+        }else{
+
+            if(activityType.isEmpty()){
+                filterRoutes.addAll(originalRoutes);
+            }else{
+                for(Route route: originalRoutes){
+                    if(activityType.contains(route.getActivityType())){
+                        filterRoutes.add(route);
+                    }
+                }
+            }
+
+        }
+
+
+        routes.clear();
+
+        routes.addAll(filterRoutes);
+
+        placeRoutesMarkerOnMap();
+
+    }
+
 
     public void sendRequestToGetRoutes(String url, final String filterBy, final String userId) {
 
@@ -668,6 +742,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
 
                         if (routeInfo.getResult() == 1) {
 
+                            originalRoutes.addAll(routeInfo.getRoutes());
                             routes.addAll(routeInfo.getRoutes());
 
                             placeRoutesMarkerOnMap();

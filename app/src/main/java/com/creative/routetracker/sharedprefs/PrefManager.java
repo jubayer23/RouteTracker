@@ -7,6 +7,7 @@ import android.content.SharedPreferences.Editor;
 import android.location.Location;
 
 import com.creative.routetracker.BuildConfig;
+import com.creative.routetracker.model.Route;
 import com.creative.routetracker.model.RouteLocation;
 import com.creative.routetracker.model.User;
 import com.google.gson.Gson;
@@ -47,6 +48,7 @@ public class PrefManager {
     private static final String KEY_EMAIL_CACHE = "key_email_cache";
     private static final String ROUTE_RECORDING_STATUS = "key_driving_status";
     private static final String KEY_ROUTE_LOCATION = "KEY_ROUTE_LOCATION";
+    private static final String KEY_FAV_ROUTE = "KEY_FAV_ROUTE";
 
     public PrefManager(Context context) {
         this._context = context;
@@ -155,6 +157,41 @@ public class PrefManager {
         if (gson.isEmpty()) return productFromShared;
 
         Type type = new TypeToken<List<RouteLocation>>() {
+        }.getType();
+        productFromShared = GSON.fromJson(gson, type);
+
+        return productFromShared;
+    }
+
+
+    public void setFavRoutes(ArrayList<Route> obj) {
+        editor = pref.edit();
+
+        editor.putString(KEY_FAV_ROUTE, GSON.toJson(obj));
+
+        // commit changes
+        editor.commit();
+    }
+
+    public void setFavRoutes(String obj) {
+        editor = pref.edit();
+
+        editor.putString(KEY_FAV_ROUTE, obj);
+
+        // commit changes
+        editor.commit();
+    }
+
+
+    public ArrayList<Route> getFavRoutes() {
+
+        ArrayList<Route> productFromShared = new ArrayList<>();
+
+        String gson = pref.getString(KEY_FAV_ROUTE, "");
+
+        if (gson.isEmpty()) return productFromShared;
+
+        Type type = new TypeToken<List<Route>>() {
         }.getType();
         productFromShared = GSON.fromJson(gson, type);
 

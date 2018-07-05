@@ -101,7 +101,7 @@ public class FragmentRouteReview extends Fragment implements View.OnClickListene
     private void init(View view) {
 
         recyclerView = view.findViewById(R.id.recycler_view);
-        recyclerView.setNestedScrollingEnabled(false);
+        //recyclerView.setNestedScrollingEnabled(false);
 
         progressBar = view.findViewById(R.id.progressBar_cyclic);
         progressBar.setVisibility(View.GONE);

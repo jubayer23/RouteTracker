@@ -9,10 +9,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.creative.routetracker.CustomDialog.DialogFilter;
 import com.creative.routetracker.Utility.GpsEnableTool;
 import com.creative.routetracker.Utility.LastLocationOnly;
 import com.creative.routetracker.appdata.MydApplication;
 import com.creative.routetracker.fragment.HomeFragment;
+import com.creative.routetracker.model.Route;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HomeActivity extends BaseActivity {
 
@@ -83,7 +88,35 @@ public class HomeActivity extends BaseActivity {
             startActivity(intent);
             finish();
 
+        }else if(item.getItemId() == R.id.action_filter){
+            showDialogToFilterOption();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void showDialogToFilterOption() {
+        final DialogFilter dialogFilter = new DialogFilter(this);
+
+        DialogFilter.DialogFilterListener routeInfoListener = new DialogFilter.DialogFilterListener() {
+
+
+            @Override
+            public void filterBy(boolean isFav, ArrayList<String> activityType) {
+
+                HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(TAG_HOME_FRAGMENT);
+
+                homeFragment.changeMapAccordingToFilter(isFav, activityType);
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        };
+
+        dialogFilter.showDialog(routeInfoListener);
+
+
     }
 }
