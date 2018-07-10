@@ -27,23 +27,19 @@
         android:roundIcon="@mipmap/logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-
-        <activity android:name=".SplashActivity"
-            android:theme="@style/AppTheme.NoActionBar.FullScreen"
-            android:configChanges="orientation|screenSize|keyboardHidden">
+        <activity
+            android:name=".SplashActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/AppTheme.NoActionBar.FullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/AppTheme.NoActionBar2">
-
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar2"></activity>
         <activity
             android:name=".RegistrationActivity"
             android:label="Registration"
@@ -56,6 +52,11 @@
         <activity
             android:name=".RouteTrackDetails"
             android:label="Route Details" />
+        <activity android:name=".MyRouteActivity"
+            android:label="My routes"
+            android:configChanges="orientation|screenSize|keyboardHidden"></activity>
+
+
 
         <service
             android:name=".service.GpsServiceUpdate"

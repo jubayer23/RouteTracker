@@ -46,8 +46,12 @@ import com.creative.routetracker.model.Route;
 import com.creative.routetracker.model.RouteLocation;
 import com.creative.routetracker.model.Routes;
 import com.creative.routetracker.service.GpsServiceUpdate;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -134,7 +138,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         initMapView(view, savedInstanceState);
 
 
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
 
         // init(view);
@@ -177,7 +180,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
         showProgressDialog("please wait...",true, false);
         mapView.getMapAsync(this);
     }
-
 
     @Override
     public void onClick(View view) {
@@ -894,6 +896,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener, OnMa
     }
 
 
+    public void searchResult(Place place){
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 12.0f));
+    }
 
 
     private class RouteRenderer extends DefaultClusterRenderer<Route>{
